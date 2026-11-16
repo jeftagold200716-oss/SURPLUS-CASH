@@ -700,7 +700,7 @@ button {
 
 // Replace these with your actual Supabase credentials.
 
-const SUPABASE_URL = "https://bnqogybpomywzrxmvbgv.supabase.co/rest/v1/";
+const SUPABASE_URL = "const SUPABASE_URL = "const SUPABASE_URL = "https://bnqogybpomywzrxmvbgv.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_0tJ7xepz0PPupB0jPMh9WQ_weCRrnFD";
 
 // Enter your WhatsApp number with country code.
@@ -982,28 +982,35 @@ document.getElementById("loginForm").addEventListener("submit", async function(e
 // 9. OPEN USER DASHBOARD
 // ===================================
 
+
 async function openDashboard() {
 
-    if(!currentUser || !db) return;
-
-    document.getElementById("authPage").classList.add("hidden");
-
-    document.getElementById("dashboardPage").classList.remove("hidden");
-
-    document.getElementById("bottomNav").classList.remove("hidden");
+    if (!currentUser || !db) return;
 
     const { data, error } = await db
         .from("profiles")
-        .select("full_name,balance_xaf,last_bonus_at")
+        .select("full_name, phone, balance_xaf, last_bonus_at")
         .eq("id", currentUser.id)
         .single();
 
-    if(error) {
-
-        alert("Could not load your profile. Please check your Supabase database setup.");
+    if (error) {
+        alert("Your account was created, but your profile could not be loaded. Please check your Supabase database setup.");
+        console.error("Profile loading error:", error);
         return;
-
     }
+
+    document.getElementById("authPage").classList.add("hidden");
+    document.getElementById("dashboardPage").classList.remove("hidden");
+    document.getElementById("bottomNav").classList.remove("hidden");
+
+    document.getElementById("userGreeting").textContent =
+        "Hello, " + (data.full_name || "Investor") + " 👋";
+
+    document.getElementById("accountBalance").textContent =
+        Number(data.balance_xaf || 0).toLocaleString("en-US");
+
+    updateBonusButton(data.last_bonus_at);
+}
 
     document.getElementById("userGreeting").textContent =
         "Hello, " + (data.full_name || "Investor") + " 👋";
