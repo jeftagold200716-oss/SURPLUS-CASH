@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -700,14 +699,17 @@ button {
 
 // Replace these with your actual Supabase credentials.
 
-const SUPABASE_URL = "const SUPABASE_URL = "const SUPABASE_URL = "https://bnqogybpomywzrxmvbgv.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_0tJ7xepz0PPupB0jPMh9WQ_weCRrnFD";
+const SUPABASE_URL = "https://bnqogybpomywzrxmvbgv.supabase.co/rest/v1/";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJucW9neWJwb215d3pyeG12Ymd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ4MzExOTIsImV4cCI6MjExMDQwNzE5Mn0.by6E_RswWkSlHu-t5H9myE3YGhsJvTLS_qRqPjv1Ag8";
 
 // Enter your WhatsApp number with country code.
 // Example: 2376XXXXXXXX
 
 const WHATSAPP_NUMBER = "237670822535";
 
+const supabaseReady =
+    SUPABASE_URL.startsWith("https://") &&
+    SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY";
 
 const db = supabaseReady
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -858,19 +860,19 @@ document.getElementById("registerForm").addEventListener("submit", async functio
 
         currentPhone = phone;
 
-        if(data.session) {
+       if(data.session) {
 
-            currentUser = data.user;
-            await openDashboard();
+    currentUser = data.user;
+    await openDashboard();
 
-        } else {
+} else {
 
-            document.getElementById("registerBox").classList.add("hidden");
-            document.getElementById("verifyBox").classList.remove("hidden");
+    showMessage(
+        "registerMessage",
+        "Account created, but automatic login was not completed. Check your Supabase phone confirmation settings."
+    );
 
-            showMessage("verifyMessage", "A verification code has been requested. Check your phone.");
-
-        }
+}
 
     } catch(error) {
 
@@ -890,19 +892,33 @@ document.getElementById("registerForm").addEventListener("submit", async functio
 // 7. PHONE VERIFICATION
 // ===================================
 
-if(data.session) {
+document.getElementById("verifyForm").addEventListener("submit", async function(e) {
 
-    currentUser = data.user;
-    await openDashboard();
+    e.preventDefault();
 
-} else {
+    const code = document.getElementById("otpCode").value.trim();
 
-    showMessage(
-        "registerMessage",
-        "Account created, but automatic login was not completed. Check your Supabase phone confirmation settings."
-    );
+    try {
 
-}
+        const { data, error } = await db.auth.verifyOtp({
+
+            phone: currentPhone,
+            token: code,
+            type: "sms"
+
+        });
+
+        if(error) throw error;
+
+        currentUser = data.user;
+
+        await openDashboard();
+
+    } catch(error) {
+
+        showMessage("verifyMessage", error.message);
+
+    }
 
 });
 
@@ -966,7 +982,6 @@ document.getElementById("loginForm").addEventListener("submit", async function(e
 // ===================================
 
 
-
 async function openDashboard() {
 
     if (!currentUser || !db) return;
@@ -996,6 +1011,16 @@ async function openDashboard() {
     updateBonusButton(data.last_bonus_at);
 }
 
+
+    document.getElementById("userGreeting").textContent =
+        "Hello, " + (data.full_name || "Investor") + " 👋";
+
+    document.getElementById("accountBalance").textContent =
+        Number(data.balance_xaf || 0).toLocaleString("en-US");
+
+    updateBonusButton(data.last_bonus_at);
+
+}
 
 
 // ===================================
