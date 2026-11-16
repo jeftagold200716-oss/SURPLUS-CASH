@@ -708,9 +708,6 @@ const SUPABASE_ANON_KEY = "sb_publishable_0tJ7xepz0PPupB0jPMh9WQ_weCRrnFD";
 
 const WHATSAPP_NUMBER = "237670822535";
 
-const supabaseReady =
-   const SUPABASE_URL = "https://bnqogybpomywzrxmvbgv.supabase.co/rest/v1/";
-   const SUPABASE_ANON_KEY = "sb_publishable_0tJ7xepz0PPupB0jPMh9WQ_weCRrnFD";
 
 const db = supabaseReady
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -969,6 +966,7 @@ document.getElementById("loginForm").addEventListener("submit", async function(e
 // ===================================
 
 
+
 async function openDashboard() {
 
     if (!currentUser || !db) return;
@@ -998,15 +996,6 @@ async function openDashboard() {
     updateBonusButton(data.last_bonus_at);
 }
 
-    document.getElementById("userGreeting").textContent =
-        "Hello, " + (data.full_name || "Investor") + " 👋";
-
-    document.getElementById("accountBalance").textContent =
-        Number(data.balance_xaf || 0).toLocaleString("en-US");
-
-    updateBonusButton(data.last_bonus_at);
-
-}
 
 
 // ===================================
