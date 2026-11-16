@@ -1,1 +1,1166 @@
 
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GreenVest - Investment Platform</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background: linear-gradient(120deg, #eaffed, #c9f0d1, #f1fff1);
+    background-size: 300% 300%;
+    animation: cloudMove 15s ease infinite;
+    color: #174b32;
+    overflow-x: hidden;
+}
+
+@keyframes cloudMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.stars {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.star {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 0 10px 3px #ffffff;
+    animation: glow 2s infinite alternate;
+}
+
+@keyframes glow {
+    from { opacity: .2; transform: scale(.7); }
+    to { opacity: 1; transform: scale(1.5); }
+}
+
+.container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 460px;
+    margin: auto;
+    padding: 25px 18px;
+}
+
+.logo {
+    text-align: center;
+    font-size: 30px;
+    font-weight: bold;
+    color: #12633d;
+    margin: 15px 0 8px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #668b72;
+    margin-bottom: 25px;
+    font-size: 13px;
+}
+
+.card {
+    background: rgba(255,255,255,.83);
+    padding: 25px 20px;
+    border-radius: 20px;
+    box-shadow: 0 10px 35px rgba(25,100,55,.10);
+    border: 1px solid white;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #17643e;
+}
+
+input {
+    width: 100%;
+    padding: 14px;
+    margin: 8px 0 15px;
+    border: 1px solid #d6eadb;
+    border-radius: 10px;
+    outline: none;
+    background: #fbfffb;
+    font-size: 14px;
+}
+
+input:focus {
+    border-color: #23945b;
+}
+
+label {
+    font-size: 13px;
+    font-weight: bold;
+    color: #426d51;
+}
+
+button {
+    cursor: pointer;
+}
+
+.main-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(90deg, #147346, #29a365);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+.main-btn:disabled {
+    opacity: .6;
+    cursor: wait;
+}
+
+.switch {
+    text-align: center;
+    margin-top: 18px;
+    font-size: 13px;
+}
+
+.switch a, .forgot {
+    color: #16804b;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.forgot {
+    display: block;
+    text-align: center;
+    margin-top: 17px;
+    font-size: 12px;
+}
+
+.message {
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 9px;
+    background: #fff4d9;
+    color: #74541d;
+    font-size: 12px;
+    line-height: 1.5;
+    display: none;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* DASHBOARD */
+
+.dashboard {
+    max-width: 650px;
+    margin: auto;
+    padding: 20px 16px 100px;
+    position: relative;
+    z-index: 1;
+}
+
+.top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.top h2 {
+    margin: 0;
+}
+
+.logout {
+    background: white;
+    border: 1px solid #cde6d3;
+    padding: 9px 13px;
+    border-radius: 8px;
+    color: #267149;
+}
+
+.welcome {
+    margin-bottom: 18px;
+}
+
+.welcome h2 {
+    text-align: left;
+    margin-bottom: 5px;
+}
+
+.welcome p {
+    font-size: 13px;
+    color: #64816d;
+}
+
+/* BALANCE */
+
+.balance-card {
+    background: linear-gradient(120deg, #105b38, #188452, #36a96c);
+    color: white;
+    padding: 23px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px #17663c30;
+    margin-bottom: 18px;
+}
+
+.balance-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.balance-actions button {
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.4);
+    color: white;
+    padding: 9px 13px;
+    border-radius: 8px;
+    font-size: 12px;
+}
+
+.balance-label {
+    font-size: 11px;
+    letter-spacing: 1px;
+    margin-top: 20px;
+    opacity: .8;
+}
+
+.balance {
+    font-size: 34px;
+    font-weight: bold;
+    margin: 8px 0 15px;
+}
+
+/* BONUS */
+
+.bonus-card {
+    background: white;
+    border-radius: 17px;
+    padding: 19px;
+    margin-bottom: 18px;
+    box-shadow: 0 5px 20px #256a3b10;
+}
+
+.bonus-card h3 {
+    font-size: 16px;
+    margin-bottom: 7px;
+}
+
+.bonus-card p {
+    font-size: 12px;
+    color: #799181;
+    margin-bottom: 15px;
+}
+
+.bonus-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bonus-amount {
+    font-size: 23px;
+    font-weight: bold;
+    color: #19814d;
+}
+
+.claim-btn {
+    background: #188451;
+    color: white;
+    border: none;
+    padding: 11px 15px;
+    border-radius: 9px;
+    font-weight: bold;
+}
+
+.claim-btn:disabled {
+    background: #9eb9a7;
+}
+
+/* TERMS */
+
+.terms {
+    background: rgba(255,255,255,.75);
+    padding: 18px;
+    border-radius: 14px;
+    margin-bottom: 20px;
+}
+
+.terms h3 {
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.terms p {
+    font-size: 12px;
+    line-height: 1.6;
+    color: #708978;
+}
+
+/* MENU */
+
+.menu-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 13px;
+}
+
+.menu-card {
+    background: rgba(255,255,255,.85);
+    padding: 23px 15px;
+    border-radius: 16px;
+    border: 1px solid white;
+    box-shadow: 0 5px 20px #256a3b10;
+    text-align: left;
+    color: #205a3b;
+    min-height: 115px;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.menu-card span {
+    display: block;
+    font-size: 25px;
+    margin-bottom: 12px;
+}
+
+.menu-card small {
+    display: block;
+    font-size: 10px;
+    color: #829589;
+    margin-top: 7px;
+    font-weight: normal;
+}
+
+.section-page {
+    background: white;
+    border-radius: 18px;
+    padding: 30px 20px;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.section-page h2 {
+    margin-bottom: 10px;
+}
+
+.section-page p {
+    font-size: 13px;
+    color: #718b79;
+    margin-bottom: 20px;
+}
+
+.back-btn {
+    padding: 11px 20px;
+    background: #188451;
+    color: white;
+    border: none;
+    border-radius: 9px;
+}
+
+/* FOOTER */
+
+.footer {
+    text-align: center;
+    padding: 30px 10px 20px;
+    color: #64816d;
+    font-size: 11px;
+    line-height: 1.8;
+}
+
+/* BOTTOM NAVIGATION */
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    padding: 12px 5px;
+    background: rgba(255,255,255,.95);
+    border-top: 1px solid #dcecdf;
+    z-index: 5;
+}
+
+.bottom-nav button {
+    border: none;
+    background: transparent;
+    color: #789080;
+    font-size: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.bottom-nav button span {
+    font-size: 20px;
+}
+
+.bottom-nav button.active {
+    color: #16804b;
+    font-weight: bold;
+}
+
+@media(max-width:380px) {
+    .balance { font-size: 27px; }
+    .menu-card { padding: 17px 12px; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="stars" id="stars"></div>
+
+<!-- REGISTRATION AND LOGIN -->
+
+<div class="container" id="authPage">
+
+    <div class="logo">GREENVEST</div>
+    <p class="subtitle">Welcome to your investment platform</p>
+
+    <div class="card" id="registerBox">
+
+        <h2>Create Account</h2>
+
+        <form id="registerForm">
+
+            <label>Full Name</label>
+            <input type="text" id="fullName" placeholder="Enter your full name" required>
+
+            <label>Cameroon Phone Number</label>
+            <input type="tel" id="regPhone" placeholder="6XXXXXXXX or 2XXXXXXXX" required>
+
+            <label>Password</label>
+            <input type="password" id="regPassword" placeholder="Minimum 6 characters" minlength="6" required>
+
+            <label>Invite Code</label>
+            <input type="text" id="inviteCode" placeholder="Enter invite code">
+
+            <button class="main-btn" type="submit">REGISTER NOW</button>
+
+        </form>
+
+        <a class="forgot" id="forgotLink" href="#" target="_blank">
+            Forgot Password? Contact us on WhatsApp
+        </a>
+
+        <div class="switch">
+            Already have an account?
+            <a href="#" onclick="showLogin();return false;">Login</a>
+        </div>
+
+        <div class="message" id="registerMessage"></div>
+
+    </div>
+
+    <div class="card hidden" id="loginBox">
+
+        <h2>Welcome Back</h2>
+
+        <form id="loginForm">
+
+            <label>Cameroon Phone Number</label>
+            <input type="tel" id="loginPhone" placeholder="6XXXXXXXX" required>
+
+            <label>Password</label>
+            <input type="password" id="loginPassword" placeholder="Enter password" required>
+
+            <button class="main-btn" type="submit">LOGIN</button>
+
+        </form>
+
+        <a class="forgot" id="forgotLink2" href="#" target="_blank">
+            Forgot Password? Contact us on WhatsApp
+        </a>
+
+        <div class="switch">
+            Don't have an account?
+            <a href="#" onclick="showRegister();return false;">Register</a>
+        </div>
+
+        <div class="message" id="loginMessage"></div>
+
+    </div>
+
+    <!-- OTP VERIFICATION -->
+
+    <div class="card hidden" id="verifyBox">
+
+        <h2>Verify Your Number</h2>
+        <p style="font-size:13px;color:#718b79;margin-bottom:15px;text-align:center;">
+            Enter the verification code sent to your phone.
+        </p>
+
+        <form id="verifyForm">
+            <label>Verification Code</label>
+            <input type="text" id="otpCode" placeholder="Enter SMS code" required>
+            <button class="main-btn" type="submit">VERIFY ACCOUNT</button>
+        </form>
+
+        <div class="message" id="verifyMessage"></div>
+
+    </div>
+
+</div>
+
+
+<!-- USER DASHBOARD -->
+
+<div class="dashboard hidden" id="dashboardPage">
+
+    <div class="top">
+        <h2>GREENVEST</h2>
+        <button class="logout" onclick="logout()">Logout ↗</button>
+    </div>
+
+    <div class="welcome">
+        <h2 id="userGreeting">Hello, Investor 👋</h2>
+        <p>Welcome to your personal dashboard.</p>
+    </div>
+
+    <!-- ACCOUNT BALANCE -->
+
+    <div class="balance-card">
+
+        <div class="balance-actions">
+            <button onclick="showSection('Withdrawal')">↗ Withdraw</button>
+            <button onclick="showSection('Deposit')">＋ Deposit</button>
+        </div>
+
+        <div class="balance-label">ACCOUNT BALANCE</div>
+
+        <div class="balance">
+            <span id="accountBalance">0</span> XAF
+        </div>
+
+        <p style="font-size:11px;opacity:.8;">
+            Your available account balance
+        </p>
+
+    </div>
+
+
+    <!-- DAILY BONUS -->
+
+    <div class="bonus-card">
+
+        <h3>🎁 Daily Bonus</h3>
+
+        <p>Claim your daily reward once every 24 hours.</p>
+
+        <div class="bonus-bottom">
+
+            <div class="bonus-amount">+200 XAF</div>
+
+            <button class="claim-btn" id="claimButton" onclick="claimBonus()">
+                CLAIM NOW
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- TERMS AND DEVELOPER -->
+
+    <div class="terms">
+
+        <h3>📌 Important Information</h3>
+
+        <p id="termsText">
+            Terms and conditions will be added here.
+            Please read all platform rules before using our services.
+        </p>
+
+        <br>
+
+        <p id="developerText">
+            Developed with care by GreenVest.
+        </p>
+
+    </div>
+
+
+    <!-- HOME MENU -->
+
+    <div id="homeMenu">
+
+        <div class="menu-grid">
+
+            <button class="menu-card" onclick="showSection('Products')">
+                <span>📦</span>
+                Products
+                <small>Explore available products</small>
+            </button>
+
+            <button class="menu-card" onclick="showSection('My Products')">
+                <span>💼</span>
+                My Products
+                <small>View your invested assets</small>
+            </button>
+
+            <button class="menu-card" onclick="showSection('Team')">
+                <span>👥</span>
+                Team
+                <small>Manage your team</small>
+            </button>
+
+            <button class="menu-card" onclick="showSection('Settings')">
+                <span>⚙️</span>
+                Settings
+                <small>Manage your account</small>
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- OTHER SECTIONS -->
+
+    <div id="otherSection" class="hidden">
+
+        <div class="section-page">
+            <h2 id="sectionTitle"></h2>
+            <p>This section will be developed according to your instructions.</p>
+            <button class="back-btn" onclick="showHome()">Back to Home</button>
+        </div>
+
+    </div>
+
+
+    <!-- FOOTER -->
+
+    <div class="footer">
+        <strong>GREENVEST</strong>
+        <br>
+        Your account, your dashboard.
+        <br><br>
+        © 2026 GreenVest. All Rights Reserved.
+    </div>
+
+</div>
+
+
+<!-- BOTTOM NAVIGATION -->
+
+<div class="bottom-nav hidden" id="bottomNav">
+
+    <button class="active" onclick="showHome()">
+        <span>⌂</span>Home
+    </button>
+
+    <button onclick="showSection('Products')">
+        <span>▦</span>Products
+    </button>
+
+    <button onclick="showSection('Team')">
+        <span>♧</span>Team
+    </button>
+
+    <button onclick="showSection('My Products')">
+        <span>◈</span>My Products
+    </button>
+
+    <button onclick="showSection('Settings')">
+        <span>⚙</span>Settings
+    </button>
+
+</div>
+
+
+<script>
+
+// ===================================
+// 1. SUPABASE CONFIGURATION
+// ===================================
+
+// Replace these with your actual Supabase credentials.
+
+const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
+const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+
+// Enter your WhatsApp number with country code.
+// Example: 2376XXXXXXXX
+
+const WHATSAPP_NUMBER = "2376XXXXXXXX";
+
+const supabaseReady =
+    SUPABASE_URL.startsWith("https://") &&
+    SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY";
+
+const db = supabaseReady
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
+
+let currentUser = null;
+let currentPhone = null;
+
+
+// ===================================
+// 2. WHATSAPP FORGOT PASSWORD
+// ===================================
+
+const whatsappLink =
+    "https://wa.me/" + WHATSAPP_NUMBER +
+    "?text=" + encodeURIComponent(
+        "Hello, I need help recovering access to my GreenVest account."
+    );
+
+document.getElementById("forgotLink").href = whatsappLink;
+document.getElementById("forgotLink2").href = whatsappLink;
+
+
+// ===================================
+// 3. BACKGROUND STARS
+// ===================================
+
+const stars = document.getElementById("stars");
+
+for(let i = 0; i < 45; i++) {
+
+    const star = document.createElement("div");
+
+    star.className = "star";
+
+    star.style.left = Math.random() * 100 + "%";
+    star.style.top = Math.random() * 100 + "%";
+
+    star.style.animationDelay = Math.random() * 3 + "s";
+
+    stars.appendChild(star);
+}
+
+
+// ===================================
+// 4. PHONE NUMBER VALIDATION
+// ===================================
+
+function formatCameroonPhone(number) {
+
+    let phone = number.replace(/[^\d]/g, "");
+
+    if(phone.startsWith("00237")) {
+        phone = phone.substring(2);
+    }
+
+    if(phone.startsWith("237")) {
+        phone = phone.substring(3);
+    }
+
+    if(!/^[26]\d{8}$/.test(phone)) {
+        return null;
+    }
+
+    return "+237" + phone;
+}
+
+
+// ===================================
+// 5. PAGE SWITCHING
+// ===================================
+
+function showLogin() {
+
+    document.getElementById("registerBox").classList.add("hidden");
+    document.getElementById("verifyBox").classList.add("hidden");
+    document.getElementById("loginBox").classList.remove("hidden");
+
+}
+
+function showRegister() {
+
+    document.getElementById("loginBox").classList.add("hidden");
+    document.getElementById("verifyBox").classList.add("hidden");
+    document.getElementById("registerBox").classList.remove("hidden");
+
+}
+
+function showMessage(id, message) {
+
+    const box = document.getElementById(id);
+
+    box.textContent = message;
+    box.style.display = "block";
+
+}
+
+
+// ===================================
+// 6. REGISTRATION
+// ===================================
+
+document.getElementById("registerForm").addEventListener("submit", async function(e) {
+
+    e.preventDefault();
+
+    if(!db) {
+        alert("Please configure your Supabase URL and anon key first.");
+        return;
+    }
+
+    const name = document.getElementById("fullName").value.trim();
+    const phone = formatCameroonPhone(document.getElementById("regPhone").value);
+    const password = document.getElementById("regPassword").value;
+    const invite = document.getElementById("inviteCode").value.trim();
+
+    if(!phone) {
+        showMessage("registerMessage", "Please enter a valid Cameroon number, e.g. 6XXXXXXXX.");
+        return;
+    }
+
+    if(password.length < 6) {
+        showMessage("registerMessage", "Password must contain at least 6 characters.");
+        return;
+    }
+
+    const button = this.querySelector("button");
+    button.disabled = true;
+    button.textContent = "Creating account...";
+
+    try {
+
+        const { data, error } = await db.auth.signUp({
+
+            phone: phone,
+            password: password,
+
+            options: {
+                data: {
+                    full_name: name,
+                    invite_code: invite
+                }
+            }
+
+        });
+
+        if(error) throw error;
+
+        currentPhone = phone;
+
+        if(data.session) {
+
+            currentUser = data.user;
+            await openDashboard();
+
+        } else {
+
+            document.getElementById("registerBox").classList.add("hidden");
+            document.getElementById("verifyBox").classList.remove("hidden");
+
+            showMessage("verifyMessage", "A verification code has been requested. Check your phone.");
+
+        }
+
+    } catch(error) {
+
+        showMessage("registerMessage", error.message);
+
+    } finally {
+
+        button.disabled = false;
+        button.textContent = "REGISTER NOW";
+
+    }
+
+});
+
+
+// ===================================
+// 7. PHONE VERIFICATION
+// ===================================
+
+document.getElementById("verifyForm").addEventListener("submit", async function(e) {
+
+    e.preventDefault();
+
+    const code = document.getElementById("otpCode").value.trim();
+
+    try {
+
+        const { data, error } = await db.auth.verifyOtp({
+
+            phone: currentPhone,
+            token: code,
+            type: "sms"
+
+        });
+
+        if(error) throw error;
+
+        currentUser = data.user;
+
+        await openDashboard();
+
+    } catch(error) {
+
+        showMessage("verifyMessage", error.message);
+
+    }
+
+});
+
+
+// ===================================
+// 8. LOGIN
+// ===================================
+
+document.getElementById("loginForm").addEventListener("submit", async function(e) {
+
+    e.preventDefault();
+
+    if(!db) {
+        alert("Please configure your Supabase credentials first.");
+        return;
+    }
+
+    const phone = formatCameroonPhone(document.getElementById("loginPhone").value);
+    const password = document.getElementById("loginPassword").value;
+
+    if(!phone) {
+        showMessage("loginMessage", "Enter a valid Cameroon phone number.");
+        return;
+    }
+
+    const button = this.querySelector("button");
+    button.disabled = true;
+    button.textContent = "Logging in...";
+
+    try {
+
+        const { data, error } = await db.auth.signInWithPassword({
+
+            phone: phone,
+            password: password
+
+        });
+
+        if(error) throw error;
+
+        currentUser = data.user;
+
+        await openDashboard();
+
+    } catch(error) {
+
+        showMessage("loginMessage", error.message);
+
+    } finally {
+
+        button.disabled = false;
+        button.textContent = "LOGIN";
+
+    }
+
+});
+
+
+// ===================================
+// 9. OPEN USER DASHBOARD
+// ===================================
+
+async function openDashboard() {
+
+    if(!currentUser || !db) return;
+
+    document.getElementById("authPage").classList.add("hidden");
+
+    document.getElementById("dashboardPage").classList.remove("hidden");
+
+    document.getElementById("bottomNav").classList.remove("hidden");
+
+    const { data, error } = await db
+        .from("profiles")
+        .select("full_name,balance_xaf,last_bonus_at")
+        .eq("id", currentUser.id)
+        .single();
+
+    if(error) {
+
+        alert("Could not load your profile. Please check your Supabase database setup.");
+        return;
+
+    }
+
+    document.getElementById("userGreeting").textContent =
+        "Hello, " + (data.full_name || "Investor") + " 👋";
+
+    document.getElementById("accountBalance").textContent =
+        Number(data.balance_xaf || 0).toLocaleString("en-US");
+
+    updateBonusButton(data.last_bonus_at);
+
+}
+
+
+// ===================================
+// 10. DAILY BONUS
+// ===================================
+
+function updateBonusButton(lastBonus) {
+
+    const button = document.getElementById("claimButton");
+
+    const lastTime = lastBonus ? new Date(lastBonus).getTime() : 0;
+
+    const remaining = 24 * 60 * 60 * 1000 - (Date.now() - lastTime);
+
+    if(remaining > 0) {
+
+        button.disabled = true;
+        button.textContent = "ALREADY CLAIMED";
+
+    } else {
+
+        button.disabled = false;
+        button.textContent = "CLAIM NOW";
+
+    }
+
+}
+
+async function claimBonus() {
+
+    if(!db || !currentUser) return;
+
+    const button = document.getElementById("claimButton");
+
+    button.disabled = true;
+    button.textContent = "PLEASE WAIT...";
+
+    try {
+
+        const { data, error } = await db.rpc("claim_daily_bonus");
+
+        if(error) throw error;
+
+        document.getElementById("accountBalance").textContent =
+            Number(data.balance_xaf).toLocaleString("en-US");
+
+        button.textContent = "ALREADY CLAIMED";
+
+        alert("Congratulations! 200 XAF has been added to your account.");
+
+    } catch(error) {
+
+        alert(error.message);
+
+        button.disabled = false;
+        button.textContent = "CLAIM NOW";
+
+    }
+
+}
+
+
+// ===================================
+// 11. DASHBOARD NAVIGATION
+// ===================================
+
+function showHome() {
+
+    document.getElementById("homeMenu").classList.remove("hidden");
+
+    document.getElementById("otherSection").classList.add("hidden");
+
+    setActiveNav(0);
+
+}
+
+function showSection(section) {
+
+    document.getElementById("homeMenu").classList.add("hidden");
+
+    document.getElementById("otherSection").classList.remove("hidden");
+
+    document.getElementById("sectionTitle").textContent = section;
+
+    const navItems = ["Products", "Team", "My Products", "Settings"];
+
+    setActiveNav(navItems.indexOf(section) + 1);
+
+    window.scrollTo({top: 0, behavior: "smooth"});
+
+}
+
+function setActiveNav(index) {
+
+    document.querySelectorAll(".bottom-nav button").forEach((button, i) => {
+
+        button.classList.toggle("active", i === index);
+
+    });
+
+}
+
+
+// ===================================
+// 12. LOGOUT
+// ===================================
+
+async function logout() {
+
+    if(db) await db.auth.signOut();
+
+    currentUser = null;
+
+    document.getElementById("dashboardPage").classList.add("hidden");
+
+    document.getElementById("bottomNav").classList.add("hidden");
+
+    document.getElementById("authPage").classList.remove("hidden");
+
+    showLogin();
+
+}
+
+
+// ===================================
+// 13. RESTORE EXISTING SESSION
+// ===================================
+
+async function checkSession() {
+
+    if(!db) return;
+
+    const { data } = await db.auth.getSession();
+
+    if(data.session) {
+
+        currentUser = data.session.user;
+
+        await openDashboard();
+
+    }
+
+}
+
+checkSession();
+
+</script>
+
+</body>
+</html>
