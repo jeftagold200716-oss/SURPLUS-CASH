@@ -893,33 +893,19 @@ document.getElementById("registerForm").addEventListener("submit", async functio
 // 7. PHONE VERIFICATION
 // ===================================
 
-document.getElementById("verifyForm").addEventListener("submit", async function(e) {
+if(data.session) {
 
-    e.preventDefault();
+    currentUser = data.user;
+    await openDashboard();
 
-    const code = document.getElementById("otpCode").value.trim();
+} else {
 
-    try {
+    showMessage(
+        "registerMessage",
+        "Account created, but automatic login was not completed. Check your Supabase phone confirmation settings."
+    );
 
-        const { data, error } = await db.auth.verifyOtp({
-
-            phone: currentPhone,
-            token: code,
-            type: "sms"
-
-        });
-
-        if(error) throw error;
-
-        currentUser = data.user;
-
-        await openDashboard();
-
-    } catch(error) {
-
-        showMessage("verifyMessage", error.message);
-
-    }
+}
 
 });
 
