@@ -506,24 +506,6 @@ button {
 
     <!-- OTP VERIFICATION -->
 
-    <div class="card hidden" id="verifyBox">
-
-        <h2>Verify Your Number</h2>
-        <p style="font-size:13px;color:#718b79;margin-bottom:15px;text-align:center;">
-            Enter the verification code sent to your phone.
-        </p>
-
-        <form id="verifyForm">
-            <label>Verification Code</label>
-            <input type="text" id="otpCode" placeholder="Enter SMS code" required>
-            <button class="main-btn" type="submit">VERIFY ACCOUNT</button>
-        </form>
-
-        <div class="message" id="verifyMessage"></div>
-
-    </div>
-
-</div>
 
 
 <!-- USER DASHBOARD -->
@@ -827,17 +809,32 @@ function formatCameroonPhone(number) {
 // 7. REGISTRATION
 
 
+
+// ===================================
+// 7. REGISTRATION WITHOUT SMS OTP
+// ===================================
+
 document.getElementById("registerForm").addEventListener("submit", async function(e) {
 
     e.preventDefault();
+    hideMessages();
+
+    if (!db) {
+        showMessage("registerMessage", "Database connection failed. Please refresh.");
+        return;
+    }
 
     const name = document.getElementById("fullName").value.trim();
-    const phone = formatCameroonPhone(document.getElementById("regPhone").value);
+
+    const phone = formatCameroonPhone(
+        document.getElementById("regPhone").value
+    );
+
     const password = document.getElementById("regPassword").value;
     const invite = document.getElementById("inviteCode").value.trim();
 
     if (!name) {
-        showMessage("registerMessage", "Enter your full name.");
+        showMessage("registerMessage", "Please enter your full name.");
         return;
     }
 
@@ -847,46 +844,52 @@ document.getElementById("registerForm").addEventListener("submit", async functio
     }
 
     if (password.length < 6) {
-        showMessage("registerMessage", "Password must contain at least 6 characters.");
+        showMessage("registerMessage", "Password must have at least 6 characters.");
         return;
     }
 
     const button = this.querySelector("button");
+
     button.disabled = true;
-    button.textContent = "Creating account...";
+    button.textContent = "CREATING ACCOUNT...";
 
     try {
 
         const { data, error } = await db.auth.signUp({
+
             phone: phone,
             password: password,
+
             options: {
                 data: {
                     full_name: name,
                     invite_code: invite
                 }
             }
+
         });
 
         if (error) throw error;
 
-        currentPhone = phone;
-        sessionStorage.setItem("greenvest_pending_phone", phone);
+        if (!data.user) {
+            throw new Error("Account creation failed. Please try again.");
+        }
 
-        if (data.session) {
-            currentUser = data.user;
-            await openDashboard();
-        } else {
-            document.getElementById("registerBox").classList.add("hidden");
-            document.getElementById("verifyBox").classList.remove("hidden");
-
-            showMessage(
-                "verifyMessage",
-                "Verification code sent! Check your phone and enter the SMS code."
+        if (!data.session) {
+            throw new Error(
+                "Account created but no login session was returned. Check that Confirm phone is disabled in Supabase."
             );
         }
 
+        currentUser = data.user;
+
+        showMessage("registerMessage", "Account created successfully! Opening dashboard...");
+
+        await openDashboard();
+
     } catch (error) {
+
+        console.error("Registration error:", error);
 
         showMessage("registerMessage", error.message);
 
@@ -971,55 +974,6 @@ document.getElementById("loginForm").addEventListener(
 );
 
 
-document.getElementById("verifyForm").addEventListener("submit", async function(e) {
-
-    e.preventDefault();
-
-    const code = document.getElementById("otpCode").value.trim();
-
-    const phone = currentPhone ||
-        sessionStorage.getItem("greenvest_pending_phone");
-
-    if (!phone) {
-        showMessage("verifyMessage", "Phone number missing. Please register again.");
-        return;
-    }
-
-    if (!/^\d{6}$/.test(code)) {
-        showMessage("verifyMessage", "Enter the 6-digit SMS code.");
-        return;
-    }
-
-    const button = this.querySelector("button");
-    button.disabled = true;
-    button.textContent = "Verifying...";
-
-    try {
-
-        const { data, error } = await db.auth.verifyOtp({
-            phone: phone,
-            token: code,
-            type: "sms"
-        });
-
-        if (error) throw error;
-
-        currentUser = data.user;
-
-        sessionStorage.removeItem("greenvest_pending_phone");
-
-        await openDashboard();
-
-    } catch (error) {
-
-        showMessage("verifyMessage", error.message);
-
-    } finally {
-
-        button.disabled = false;
-        button.textContent = "VERIFY ACCOUNT";
-
-    }
 
 });
 
