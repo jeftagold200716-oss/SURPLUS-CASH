@@ -1,0 +1,856 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GreenVest - User Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background: linear-gradient(120deg,#eaffed,#c9f0d1,#f1fff1);
+    background-size: 300% 300%;
+    animation: cloudMove 15s ease infinite;
+    color: #174b32;
+    overflow-x: hidden;
+}
+
+@keyframes cloudMove {
+    0% {background-position:0% 50%}
+    50% {background-position:100% 50%}
+    100% {background-position:0% 50%}
+}
+
+.stars {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.star {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 0 10px 3px white;
+    animation: glow 2s infinite alternate;
+}
+
+@keyframes glow {
+    from {opacity:.2;transform:scale(.7)}
+    to {opacity:1;transform:scale(1.5)}
+}
+
+.hidden {display:none !important}
+
+.dashboard {
+    position: relative;
+    z-index: 1;
+    max-width: 650px;
+    margin: auto;
+    padding: 22px 16px 110px;
+}
+
+.top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.brand {
+    font-size: 23px;
+    font-weight: bold;
+    color: #12633d;
+}
+
+.logout {
+    background: white;
+    border: 1px solid #cde6d3;
+    padding: 10px 14px;
+    border-radius: 9px;
+    color: #267149;
+    font-weight: bold;
+}
+
+.welcome {
+    margin-bottom: 20px;
+}
+
+.welcome h2 {
+    font-size: 22px;
+    margin-bottom: 6px;
+}
+
+.welcome p {
+    font-size: 13px;
+    color: #64816d;
+}
+
+/* BALANCE CARD */
+
+.balance-card {
+    background: linear-gradient(120deg,#105b38,#188452,#36a96c);
+    color: white;
+    padding: 23px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px #17663c30;
+    margin-bottom: 20px;
+}
+
+.balance-actions {
+    display: flex;
+    justify-content: space-between;
+}
+
+.balance-actions button {
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.4);
+    color: white;
+    padding: 9px 13px;
+    border-radius: 8px;
+    font-size: 12px;
+}
+
+.balance-label {
+    font-size: 11px;
+    letter-spacing: 1px;
+    margin-top: 22px;
+    opacity: .8;
+}
+
+.balance {
+    font-size: 34px;
+    font-weight: bold;
+    margin: 8px 0 12px;
+    overflow-wrap: anywhere;
+}
+
+.balance-card small {
+    opacity: .8;
+}
+
+/* DAILY BONUS */
+
+.bonus-card {
+    background: white;
+    border-radius: 17px;
+    padding: 19px;
+    margin-bottom: 19px;
+    box-shadow: 0 5px 20px #256a3b10;
+}
+
+.bonus-card h3 {
+    font-size: 16px;
+    margin-bottom: 7px;
+}
+
+.bonus-card p {
+    font-size: 12px;
+    color: #799181;
+    margin-bottom: 15px;
+}
+
+.bonus-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.bonus-amount {
+    font-size: 23px;
+    font-weight: bold;
+    color: #19814d;
+}
+
+.claim-btn {
+    background: #188451;
+    color: white;
+    border: none;
+    padding: 11px 15px;
+    border-radius: 9px;
+    font-weight: bold;
+}
+
+.claim-btn:disabled {
+    background: #9eb9a7;
+    cursor: not-allowed;
+}
+
+/* INFORMATION */
+
+.terms {
+    background: rgba(255,255,255,.8);
+    padding: 18px;
+    border-radius: 14px;
+    margin-bottom: 22px;
+}
+
+.terms h3 {
+    font-size: 14px;
+    margin-bottom: 9px;
+}
+
+.terms p {
+    font-size: 12px;
+    line-height: 1.7;
+    color: #708978;
+}
+
+/* MENU */
+
+.menu-heading {
+    font-size: 17px;
+    margin-bottom: 14px;
+}
+
+.menu-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 13px;
+}
+
+.menu-card {
+    background: rgba(255,255,255,.88);
+    padding: 23px 15px;
+    border-radius: 16px;
+    border: 1px solid white;
+    box-shadow: 0 5px 20px #256a3b10;
+    text-align: left;
+    color: #205a3b;
+    min-height: 125px;
+    font-size: 15px;
+    font-weight: bold;
+    transition: .2s;
+}
+
+.menu-card:active {
+    transform: scale(.97);
+}
+
+.menu-card span {
+    display: block;
+    font-size: 27px;
+    margin-bottom: 12px;
+}
+
+.menu-card small {
+    display: block;
+    font-size: 10px;
+    color: #829589;
+    margin-top: 7px;
+    font-weight: normal;
+}
+
+/* OTHER PAGES */
+
+.section-page {
+    background: white;
+    border-radius: 18px;
+    padding: 30px 20px;
+    text-align: center;
+    margin-top: 20px;
+    box-shadow: 0 5px 20px #256a3b10;
+}
+
+.section-page h2 {
+    margin-bottom: 12px;
+    color: #17643e;
+}
+
+.section-page p {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #718b79;
+    margin-bottom: 20px;
+}
+
+.back-btn {
+    padding: 11px 20px;
+    background: #188451;
+    color: white;
+    border: none;
+    border-radius: 9px;
+}
+
+/* FOOTER */
+
+.footer {
+    text-align: center;
+    padding: 32px 10px 20px;
+    color: #64816d;
+    font-size: 11px;
+    line-height: 1.8;
+}
+
+/* BOTTOM NAV */
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    padding: 12px 3px;
+    background: rgba(255,255,255,.96);
+    border-top: 1px solid #dcecdf;
+    z-index: 5;
+}
+
+.bottom-nav button {
+    border: none;
+    background: transparent;
+    color: #789080;
+    font-size: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.bottom-nav button span {
+    font-size: 20px;
+}
+
+.bottom-nav button.active {
+    color: #16804b;
+    font-weight: bold;
+}
+
+.status-message {
+    padding: 12px;
+    margin-bottom: 15px;
+    background: #fff4d9;
+    color: #74541d;
+    border-radius: 9px;
+    font-size: 12px;
+    line-height: 1.5;
+    display: none;
+}
+
+@media(max-width:380px) {
+    .balance {font-size:27px}
+    .menu-card {padding:17px 12px}
+    .bottom-nav button {font-size:9px}
+}
+</style>
+</head>
+
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div class="dashboard">
+
+    <!-- HEADER -->
+
+    <div class="top">
+        <div class="brand">GREENVEST</div>
+        <button class="logout" onclick="logout()">Logout ↗</button>
+    </div>
+
+    <!-- WELCOME -->
+
+    <div class="welcome">
+        <h2 id="userGreeting">Hello, Investor 👋</h2>
+        <p>Welcome to your personal dashboard.</p>
+    </div>
+
+    <div class="status-message" id="statusMessage"></div>
+
+    <!-- BALANCE -->
+
+    <div class="balance-card">
+
+        <div class="balance-actions">
+            <button onclick="showSection('Withdrawal')">
+                ↗ Withdraw
+            </button>
+
+            <button onclick="showSection('Deposit')">
+                ＋ Deposit
+            </button>
+        </div>
+
+        <div class="balance-label">ACCOUNT BALANCE</div>
+
+        <div class="balance">
+            <span id="accountBalance">0</span> XAF
+        </div>
+
+        <small>Your available account balance</small>
+
+    </div>
+
+    <!-- DAILY BONUS -->
+
+    <div class="bonus-card">
+
+        <h3>🎁 Daily Bonus</h3>
+
+        <p>Claim your daily reward once every 24 hours.</p>
+
+        <div class="bonus-bottom">
+            <div class="bonus-amount">+200 XAF</div>
+
+            <button
+                class="claim-btn"
+                id="claimButton"
+                onclick="claimBonus()">
+                CLAIM NOW
+            </button>
+        </div>
+
+    </div>
+
+    <!-- TERMS -->
+
+    <div class="terms">
+
+        <h3>📌 Important Information</h3>
+
+        <p id="termsText">
+            Terms and conditions will be added here.
+            Please read all platform rules before using our services.
+        </p>
+
+        <br>
+
+        <p id="developerText">
+            Developed with care by GreenVest.
+        </p>
+
+    </div>
+
+    <!-- MENU -->
+
+    <h3 class="menu-heading">Explore GreenVest</h3>
+
+    <div id="homeMenu">
+
+        <div class="menu-grid">
+
+            <button class="menu-card" onclick="showSection('Products')">
+                <span>📦</span>
+                Products
+                <small>Explore available products</small>
+            </button>
+
+            <button class="menu-card" onclick="showSection('My Products')">
+                <span>💼</span>
+                My Products
+                <small>View your invested assets</small>
+            </button>
+
+            <button class="menu-card" onclick="showSection('Team')">
+                <span>👥</span>
+                Team
+                <small>Manage your team</small>
+            </button>
+
+            <button class="menu-card" onclick="showSection('Settings')">
+                <span>⚙️</span>
+                Settings
+                <small>Manage your account</small>
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- OTHER SECTIONS -->
+
+    <div id="otherSection" class="hidden">
+
+        <div class="section-page">
+
+            <h2 id="sectionTitle">Section</h2>
+
+            <p id="sectionDescription">
+                This section will be developed according to your instructions.
+            </p>
+
+            <button class="back-btn" onclick="showHome()">
+                Back to Home
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+
+    <div class="footer">
+        <strong>GREENVEST</strong>
+        <br>
+        Your account, your dashboard.
+        <br><br>
+        © 2026 GreenVest. All Rights Reserved.
+    </div>
+
+</div>
+
+<!-- BOTTOM NAVIGATION -->
+
+<div class="bottom-nav">
+
+    <button class="active" onclick="showHome()">
+        <span>⌂</span>Home
+    </button>
+
+    <button onclick="showSection('Products')">
+        <span>▦</span>Products
+    </button>
+
+    <button onclick="showSection('Team')">
+        <span>♧</span>Team
+    </button>
+
+    <button onclick="showSection('My Products')">
+        <span>◈</span>My Products
+    </button>
+
+    <button onclick="showSection('Settings')">
+        <span>⚙</span>Settings
+    </button>
+
+</div>
+
+
+<script>
+
+// ======================================
+// 1. SUPABASE CONFIGURATION
+// ======================================
+
+const SUPABASE_URL =
+"https://bnqogybpomywzrxmvbgv.supabase.co";
+
+// Paste the SAME Supabase publishable/anon key
+// that you used in index.html.
+
+const SUPABASE_ANON_KEY =
+"PASTE_YOUR_EXISTING_SUPABASE_KEY_HERE";
+
+const db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+);
+
+let currentUser = null;
+let profileData = null;
+
+
+// ======================================
+// 2. BACKGROUND STARS
+// ======================================
+
+const stars = document.getElementById("stars");
+
+for(let i = 0; i < 45; i++) {
+
+    const star = document.createElement("div");
+
+    star.className = "star";
+
+    star.style.left = Math.random() * 100 + "%";
+    star.style.top = Math.random() * 100 + "%";
+    star.style.animationDelay = Math.random() * 3 + "s";
+
+    stars.appendChild(star);
+}
+
+
+// ======================================
+// 3. STATUS MESSAGE
+// ======================================
+
+function showStatus(message) {
+
+    const box = document.getElementById("statusMessage");
+
+    box.textContent = message;
+    box.style.display = "block";
+
+}
+
+
+// ======================================
+// 4. LOAD USER PROFILE
+// ======================================
+
+async function loadProfile() {
+
+    const {data, error} = await db
+        .from("profiles")
+        .select("full_name, phone, balance_xaf, last_bonus_at")
+        .eq("id", currentUser.id)
+        .single();
+
+    if(error) {
+
+        console.error("Profile error:", error);
+
+        showStatus(
+            "Your account is logged in, but your profile could not load. Check your profiles table and its SELECT policy."
+        );
+
+        return false;
+    }
+
+    profileData = data;
+
+    document.getElementById("userGreeting").textContent =
+        "Hello, " + (data.full_name || "Investor") + " 👋";
+
+    updateBalance(data.balance_xaf);
+
+    updateBonusButton(data.last_bonus_at);
+
+    return true;
+}
+
+
+// ======================================
+// 5. UPDATE BALANCE
+// ======================================
+
+function updateBalance(balance) {
+
+    document.getElementById("accountBalance").textContent =
+        Number(balance || 0).toLocaleString("en-US");
+
+}
+
+
+// ======================================
+// 6. DAILY BONUS BUTTON
+// ======================================
+
+function updateBonusButton(lastBonus) {
+
+    const button = document.getElementById("claimButton");
+
+    const lastTime = lastBonus
+        ? new Date(lastBonus).getTime()
+        : 0;
+
+    const remaining =
+        24 * 60 * 60 * 1000 - (Date.now() - lastTime);
+
+    if(remaining > 0) {
+
+        button.disabled = true;
+        button.textContent = "ALREADY CLAIMED";
+
+    } else {
+
+        button.disabled = false;
+        button.textContent = "CLAIM NOW";
+
+    }
+
+}
+
+
+// ======================================
+// 7. CLAIM DAILY BONUS
+// ======================================
+
+async function claimBonus() {
+
+    if(!currentUser) return;
+
+    const button = document.getElementById("claimButton");
+
+    button.disabled = true;
+    button.textContent = "PLEASE WAIT...";
+
+    try {
+
+        const {data, error} = await db.rpc("claim_daily_bonus");
+
+        if(error) throw error;
+
+        // The server-side function is responsible
+        // for checking the 24-hour limit and crediting 200 XAF.
+
+        await loadProfile();
+
+        button.textContent = "ALREADY CLAIMED";
+
+        alert("Congratulations! Your daily bonus has been processed.");
+
+    } catch(error) {
+
+        console.error("Bonus error:", error);
+
+        alert("Bonus could not be claimed: " + error.message);
+
+        if(profileData) {
+            updateBonusButton(profileData.last_bonus_at);
+        } else {
+            button.disabled = false;
+            button.textContent = "CLAIM NOW";
+        }
+
+    }
+
+}
+
+
+// ======================================
+// 8. DASHBOARD NAVIGATION
+// ======================================
+
+function showHome() {
+
+    document.getElementById("homeMenu").classList.remove("hidden");
+
+    document.getElementById("otherSection").classList.add("hidden");
+
+    setActiveNav(0);
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+
+}
+
+
+function showSection(section) {
+
+    document.getElementById("homeMenu").classList.add("hidden");
+
+    document.getElementById("otherSection").classList.remove("hidden");
+
+    document.getElementById("sectionTitle").textContent = section;
+
+    const descriptions = {
+        "Products": "Explore the available GreenVest investment products.",
+        "My Products": "View your purchased products and investment progress.",
+        "Team": "View your team and referral information.",
+        "Settings": "Manage your personal account settings.",
+        "Deposit": "Your deposit section will be configured here.",
+        "Withdrawal": "Your withdrawal section will be configured here."
+    };
+
+    document.getElementById("sectionDescription").textContent =
+        descriptions[section] || "This section will be developed soon.";
+
+    const navItems = [
+        "Products",
+        "Team",
+        "My Products",
+        "Settings"
+    ];
+
+    const index = navItems.indexOf(section);
+
+    setActiveNav(index === -1 ? -1 : index + 1);
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+
+}
+
+
+function setActiveNav(index) {
+
+    document.querySelectorAll(".bottom-nav button")
+        .forEach((button, i) => {
+
+            button.classList.toggle("active", i === index);
+
+        });
+
+}
+
+
+// ======================================
+// 9. LOGOUT
+// ======================================
+
+async function logout() {
+
+    const {error} = await db.auth.signOut();
+
+    if(error) {
+
+        alert("Logout failed: " + error.message);
+        return;
+
+    }
+
+    window.location.replace("index.html");
+
+}
+
+
+// ======================================
+// 10. CHECK LOGIN SESSION
+// ======================================
+
+async function initializeDashboard() {
+
+    const {data, error} = await db.auth.getSession();
+
+    if(error || !data.session) {
+
+        window.location.replace("index.html");
+        return;
+
+    }
+
+    currentUser = data.session.user;
+
+    const loaded = await loadProfile();
+
+    if(loaded) {
+        console.log("GreenVest dashboard loaded successfully.");
+    }
+
+}
+
+
+// ======================================
+// 11. SESSION CHANGE
+// ======================================
+
+db.auth.onAuthStateChange((event, session) => {
+
+    if(event === "SIGNED_OUT" || !session) {
+
+        window.location.replace("index.html");
+
+    }
+
+});
+
+
+// START DASHBOARD
+
+initializeDashboard();
+
+</script>
+
+</body>
+</html>
