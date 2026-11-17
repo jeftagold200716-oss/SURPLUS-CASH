@@ -699,24 +699,26 @@ button {
 
 // Replace these with your actual Supabase credentials.
 
-const SUPABASE_URL = "https://bnqogybpomywzrxmvbgv.supabase.co/rest/v1/";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJucW9neWJwb215d3pyeG12Ymd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ4MzExOTIsImV4cCI6MjExMDQwNzE5Mn0.by6E_RswWkSlHu-t5H9myE3YGhsJvTLS_qRqPjv1Ag8";
 
-// Enter your WhatsApp number with country code.
-// Example: 2376XXXXXXXX
+const SUPABASE_URL = "https://bnqogybpomywzrxmvbgv.supabase.co";
+
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJucW9neWJwb215d3pyeG12Ymd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ4MzExOTIsImV4cCI6MjExMDQwNzE5Mn0.by6E_RswWkSlHu-t5H9myE3YGhsJvTLS_qRqPjv1Ag8";
 
 const WHATSAPP_NUMBER = "237670822535";
 
-const supabaseReady =
-    SUPABASE_URL.startsWith("https://") &&
-    SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY";
-
-const db = supabaseReady
-    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-    : null;
-
+let db = null;
 let currentUser = null;
 let currentPhone = null;
+
+if (window.supabase && window.supabase.createClient) {
+    db = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+    );
+    console.log("GreenVest Supabase initialized.");
+} else {
+    console.error("Supabase library failed to load.");
+}
 
 
 // ===================================
@@ -782,20 +784,17 @@ function formatCameroonPhone(number) {
 // 5. PAGE SWITCHING
 // ===================================
 
-function showLogin() {
 
+function showLogin() {
     document.getElementById("registerBox").classList.add("hidden");
     document.getElementById("verifyBox").classList.add("hidden");
     document.getElementById("loginBox").classList.remove("hidden");
-
 }
 
 function showRegister() {
-
     document.getElementById("loginBox").classList.add("hidden");
     document.getElementById("verifyBox").classList.add("hidden");
     document.getElementById("registerBox").classList.remove("hidden");
-
 }
 
 function showMessage(id, message) {
