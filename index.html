@@ -1,4 +1,4 @@
-
+    
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -826,114 +826,79 @@ function formatCameroonPhone(number) {
 
 // 7. REGISTRATION
 
-document.getElementById("registerForm").addEventListener(
-    "submit",
-    async function(e) {
 
-        e.preventDefault();
-        hideMessages();
+document.getElementById("registerForm").addEventListener("submit", async function(e) {
 
-        if (!db) {
-            showMessage(
-                "registerMessage",
-                "Database connection failed. Check your Supabase settings."
-            );
-            return;
-        }
+    e.preventDefault();
 
-        const name = document.getElementById("fullName").value.trim();
+    const name = document.getElementById("fullName").value.trim();
+    const phone = formatCameroonPhone(document.getElementById("regPhone").value);
+    const password = document.getElementById("regPassword").value;
+    const invite = document.getElementById("inviteCode").value.trim();
 
-        const phone = formatCameroonPhone(
-            document.getElementById("regPhone").value
-        );
-
-        const password = document.getElementById("regPassword").value;
-
-        const invite = document.getElementById("inviteCode").value.trim();
-
-        if (name.length < 2) {
-            showMessage("registerMessage", "Enter your full name.");
-            return;
-        }
-
-        if (!phone) {
-            showMessage(
-                "registerMessage",
-                "Enter a valid Cameroon number, e.g. 6XXXXXXXX."
-            );
-            return;
-        }
-
-        if (password.length < 6) {
-            showMessage(
-                "registerMessage",
-                "Your password must contain at least 6 characters."
-            );
-            return;
-        }
-
-        const button = this.querySelector("button");
-
-        button.disabled = true;
-        button.textContent = "CREATING ACCOUNT...";
-
-        try {
-
-            const { data, error } = await db.auth.signUp({
-                phone: phone,
-                password: password,
-
-                options: {
-                    data: {
-                        full_name: name,
-                        invite_code: invite
-                    }
-                }
-            });
-
-            if (error) throw error;
-
-            // Phone confirmation must be disabled in Supabase
-            // for immediate registration and dashboard access.
-
-            if(data.session) {
-
-    currentUser = data.user;
-    await openDashboard();
-
-} else {
-
-    document.getElementById("registerBox").classList.add("hidden");
-
-    document.getElementById("verifyBox").classList.remove("hidden");
-
-    showMessage(
-        "verifyMessage",
-        "Your account registration was submitted. Please check your phone for the SMS verification code."
-    );
-
-}
-            currentUser = data.user;
-
-            await openDashboard();
-
-        } catch (error) {
-
-            console.error("Registration error:", error);
-
-            showMessage(
-                "registerMessage",
-                error.message || "Registration failed. Please try again."
-            );
-
-        } finally {
-
-            button.disabled = false;
-            button.textContent = "REGISTER NOW";
-
-        }
+    if (!name) {
+        showMessage("registerMessage", "Enter your full name.");
+        return;
     }
-);
+
+    if (!phone) {
+        showMessage("registerMessage", "Enter a valid Cameroon phone number.");
+        return;
+    }
+
+    if (password.length < 6) {
+        showMessage("registerMessage", "Password must contain at least 6 characters.");
+        return;
+    }
+
+    const button = this.querySelector("button");
+    button.disabled = true;
+    button.textContent = "Creating account...";
+
+    try {
+
+        const { data, error } = await db.auth.signUp({
+            phone: phone,
+            password: password,
+            options: {
+                data: {
+                    full_name: name,
+                    invite_code: invite
+                }
+            }
+        });
+
+        if (error) throw error;
+
+        currentPhone = phone;
+        sessionStorage.setItem("greenvest_pending_phone", phone);
+
+        if (data.session) {
+            currentUser = data.user;
+            await openDashboard();
+        } else {
+            document.getElementById("registerBox").classList.add("hidden");
+            document.getElementById("verifyBox").classList.remove("hidden");
+
+            showMessage(
+                "verifyMessage",
+                "Verification code sent! Check your phone and enter the SMS code."
+            );
+        }
+
+    } catch (error) {
+
+        showMessage("registerMessage", error.message);
+
+    } finally {
+
+        button.disabled = false;
+        button.textContent = "REGISTER NOW";
+
+    }
+
+});
+
 
 
 // 8. LOGIN
@@ -1005,6 +970,58 @@ document.getElementById("loginForm").addEventListener(
     }
 );
 
+
+document.getElementById("verifyForm").addEventListener("submit", async function(e) {
+
+    e.preventDefault();
+
+    const code = document.getElementById("otpCode").value.trim();
+
+    const phone = currentPhone ||
+        sessionStorage.getItem("greenvest_pending_phone");
+
+    if (!phone) {
+        showMessage("verifyMessage", "Phone number missing. Please register again.");
+        return;
+    }
+
+    if (!/^\d{6}$/.test(code)) {
+        showMessage("verifyMessage", "Enter the 6-digit SMS code.");
+        return;
+    }
+
+    const button = this.querySelector("button");
+    button.disabled = true;
+    button.textContent = "Verifying...";
+
+    try {
+
+        const { data, error } = await db.auth.verifyOtp({
+            phone: phone,
+            token: code,
+            type: "sms"
+        });
+
+        if (error) throw error;
+
+        currentUser = data.user;
+
+        sessionStorage.removeItem("greenvest_pending_phone");
+
+        await openDashboard();
+
+    } catch (error) {
+
+        showMessage("verifyMessage", error.message);
+
+    } finally {
+
+        button.disabled = false;
+        button.textContent = "VERIFY ACCOUNT";
+
+    }
+
+});
 
 // 9. OPEN USER DASHBOARD
 
