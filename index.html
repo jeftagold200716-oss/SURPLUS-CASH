@@ -700,30 +700,75 @@ button {
 // Replace these with your actual Supabase credentials.
 
 
+
+/* =========================================
+   GREENVEST - COMPLETE AUTHENTICATION FIX
+========================================= */
+
+// 1. SUPABASE CONFIGURATION
+
 const SUPABASE_URL = "https://bnqogybpomywzrxmvbgv.supabase.co";
 
+// Paste your existing Supabase Publishable key below.
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJucW9neWJwb215d3pyeG12Ymd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ4MzExOTIsImV4cCI6MjExMDQwNzE5Mn0.by6E_RswWkSlHu-t5H9myE3YGhsJvTLS_qRqPjv1Ag8";
 
 const WHATSAPP_NUMBER = "237670822535";
 
 let db = null;
 let currentUser = null;
-let currentPhone = null;
 
+// Initialize Supabase safely
 if (window.supabase && window.supabase.createClient) {
-    db = window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_ANON_KEY
-    );
-    console.log("GreenVest Supabase initialized.");
+    try {
+        db = window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_ANON_KEY
+        );
+        console.log("GreenVest: Supabase connected.");
+    } catch (error) {
+        console.error("Supabase initialization failed:", error);
+    }
 } else {
-    console.error("Supabase library failed to load.");
+    console.error("Supabase library did not load.");
 }
 
 
-// ===================================
-// 2. WHATSAPP FORGOT PASSWORD
-// ===================================
+// 2. DISPLAY MESSAGES
+
+function showMessage(id, message) {
+    const box = document.getElementById(id);
+    box.textContent = message;
+    box.style.display = "block";
+}
+
+function hideMessages() {
+    document.querySelectorAll(".message").forEach(box => {
+        box.style.display = "none";
+        box.textContent = "";
+    });
+}
+
+
+// 3. SWITCH BETWEEN LOGIN AND REGISTRATION
+
+function showLogin() {
+    hideMessages();
+
+    document.getElementById("registerBox").classList.add("hidden");
+    document.getElementById("verifyBox").classList.add("hidden");
+    document.getElementById("loginBox").classList.remove("hidden");
+}
+
+function showRegister() {
+    hideMessages();
+
+    document.getElementById("loginBox").classList.add("hidden");
+    document.getElementById("verifyBox").classList.add("hidden");
+    document.getElementById("registerBox").classList.remove("hidden");
+}
+
+
+// 4. WHATSAPP PASSWORD RECOVERY
 
 const whatsappLink =
     "https://wa.me/" + WHATSAPP_NUMBER +
@@ -735,44 +780,36 @@ document.getElementById("forgotLink").href = whatsappLink;
 document.getElementById("forgotLink2").href = whatsappLink;
 
 
-// ===================================
-// 3. BACKGROUND STARS
-// ===================================
+// 5. BACKGROUND STARS
 
 const stars = document.getElementById("stars");
 
-for(let i = 0; i < 45; i++) {
-
+for (let i = 0; i < 45; i++) {
     const star = document.createElement("div");
 
     star.className = "star";
-
     star.style.left = Math.random() * 100 + "%";
     star.style.top = Math.random() * 100 + "%";
-
     star.style.animationDelay = Math.random() * 3 + "s";
 
     stars.appendChild(star);
 }
 
 
-// ===================================
-// 4. PHONE NUMBER VALIDATION
-// ===================================
+// 6. CAMEROON PHONE NUMBER FORMAT
 
 function formatCameroonPhone(number) {
+    let phone = number.replace(/\D/g, "");
 
-    let phone = number.replace(/[^\d]/g, "");
-
-    if(phone.startsWith("00237")) {
+    if (phone.startsWith("00237")) {
         phone = phone.substring(2);
     }
 
-    if(phone.startsWith("237")) {
+    if (phone.startsWith("237")) {
         phone = phone.substring(3);
     }
 
-    if(!/^[26]\d{8}$/.test(phone)) {
+    if (!/^[26]\d{8}$/.test(phone)) {
         return null;
     }
 
@@ -780,277 +817,254 @@ function formatCameroonPhone(number) {
 }
 
 
-// ===================================
-// 5. PAGE SWITCHING
-// ===================================
+// 7. REGISTRATION
 
+document.getElementById("registerForm").addEventListener(
+    "submit",
+    async function(e) {
 
-function showLogin() {
-    document.getElementById("registerBox").classList.add("hidden");
-    document.getElementById("verifyBox").classList.add("hidden");
-    document.getElementById("loginBox").classList.remove("hidden");
-}
+        e.preventDefault();
+        hideMessages();
 
-function showRegister() {
-    document.getElementById("loginBox").classList.add("hidden");
-    document.getElementById("verifyBox").classList.add("hidden");
-    document.getElementById("registerBox").classList.remove("hidden");
-}
+        if (!db) {
+            showMessage(
+                "registerMessage",
+                "Database connection failed. Check your Supabase settings."
+            );
+            return;
+        }
 
-function showMessage(id, message) {
+        const name = document.getElementById("fullName").value.trim();
 
-    const box = document.getElementById(id);
+        const phone = formatCameroonPhone(
+            document.getElementById("regPhone").value
+        );
 
-    box.textContent = message;
-    box.style.display = "block";
+        const password = document.getElementById("regPassword").value;
 
-}
+        const invite = document.getElementById("inviteCode").value.trim();
 
+        if (name.length < 2) {
+            showMessage("registerMessage", "Enter your full name.");
+            return;
+        }
 
-// ===================================
-// 6. REGISTRATION
-// ===================================
+        if (!phone) {
+            showMessage(
+                "registerMessage",
+                "Enter a valid Cameroon number, e.g. 6XXXXXXXX."
+            );
+            return;
+        }
 
-document.getElementById("registerForm").addEventListener("submit", async function(e) {
+        if (password.length < 6) {
+            showMessage(
+                "registerMessage",
+                "Your password must contain at least 6 characters."
+            );
+            return;
+        }
 
-    e.preventDefault();
+        const button = this.querySelector("button");
 
-    if(!db) {
-        alert("Please configure your Supabase URL and anon key first.");
-        return;
-    }
+        button.disabled = true;
+        button.textContent = "CREATING ACCOUNT...";
 
-    const name = document.getElementById("fullName").value.trim();
-    const phone = formatCameroonPhone(document.getElementById("regPhone").value);
-    const password = document.getElementById("regPassword").value;
-    const invite = document.getElementById("inviteCode").value.trim();
+        try {
 
-    if(!phone) {
-        showMessage("registerMessage", "Please enter a valid Cameroon number, e.g. 6XXXXXXXX.");
-        return;
-    }
+            const { data, error } = await db.auth.signUp({
+                phone: phone,
+                password: password,
 
-    if(password.length < 6) {
-        showMessage("registerMessage", "Password must contain at least 6 characters.");
-        return;
-    }
-
-    const button = this.querySelector("button");
-    button.disabled = true;
-    button.textContent = "Creating account...";
-
-    try {
-
-        const { data, error } = await db.auth.signUp({
-
-            phone: phone,
-            password: password,
-
-            options: {
-                data: {
-                    full_name: name,
-                    invite_code: invite
+                options: {
+                    data: {
+                        full_name: name,
+                        invite_code: invite
+                    }
                 }
+            });
+
+            if (error) throw error;
+
+            // Phone confirmation must be disabled in Supabase
+            // for immediate registration and dashboard access.
+
+            if (!data.session || !data.user) {
+                showMessage(
+                    "registerMessage",
+                    "Your account was created but phone confirmation is still required. Disable Confirm phone in Supabase Authentication settings, then try again."
+                );
+                return;
             }
 
-        });
+            currentUser = data.user;
 
-        if(error) throw error;
+            await openDashboard();
 
-        currentPhone = phone;
+        } catch (error) {
 
-       if(data.session) {
+            console.error("Registration error:", error);
 
-    currentUser = data.user;
-    await openDashboard();
+            showMessage(
+                "registerMessage",
+                error.message || "Registration failed. Please try again."
+            );
 
-} else {
+        } finally {
 
-    showMessage(
-        "registerMessage",
-        "Account created, but automatic login was not completed. Check your Supabase phone confirmation settings."
-    );
+            button.disabled = false;
+            button.textContent = "REGISTER NOW";
 
-}
-
-    } catch(error) {
-
-        showMessage("registerMessage", error.message);
-
-    } finally {
-
-        button.disabled = false;
-        button.textContent = "REGISTER NOW";
-
+        }
     }
-
-});
-
-
-// ===================================
-// 7. PHONE VERIFICATION
-// ===================================
-
-document.getElementById("verifyForm").addEventListener("submit", async function(e) {
-
-    e.preventDefault();
-
-    const code = document.getElementById("otpCode").value.trim();
-
-    try {
-
-        const { data, error } = await db.auth.verifyOtp({
-
-            phone: currentPhone,
-            token: code,
-            type: "sms"
-
-        });
-
-        if(error) throw error;
-
-        currentUser = data.user;
-
-        await openDashboard();
-
-    } catch(error) {
-
-        showMessage("verifyMessage", error.message);
-
-    }
-
-});
+);
 
 
-// ===================================
 // 8. LOGIN
-// ===================================
 
-document.getElementById("loginForm").addEventListener("submit", async function(e) {
+document.getElementById("loginForm").addEventListener(
+    "submit",
+    async function(e) {
 
-    e.preventDefault();
+        e.preventDefault();
+        hideMessages();
 
-    if(!db) {
-        alert("Please configure your Supabase credentials first.");
-        return;
+        if (!db) {
+            showMessage("loginMessage", "Supabase connection failed.");
+            return;
+        }
+
+        const phone = formatCameroonPhone(
+            document.getElementById("loginPhone").value
+        );
+
+        const password = document.getElementById("loginPassword").value;
+
+        if (!phone) {
+            showMessage(
+                "loginMessage",
+                "Enter a valid Cameroon phone number."
+            );
+            return;
+        }
+
+        if (!password) {
+            showMessage("loginMessage", "Enter your password.");
+            return;
+        }
+
+        const button = this.querySelector("button");
+
+        button.disabled = true;
+        button.textContent = "LOGGING IN...";
+
+        try {
+
+            const { data, error } = await db.auth.signInWithPassword({
+                phone: phone,
+                password: password
+            });
+
+            if (error) throw error;
+
+            currentUser = data.user;
+
+            await openDashboard();
+
+        } catch (error) {
+
+            console.error("Login error:", error);
+
+            showMessage(
+                "loginMessage",
+                error.message || "Login failed. Check your phone number and password."
+            );
+
+        } finally {
+
+            button.disabled = false;
+            button.textContent = "LOGIN";
+
+        }
     }
-
-    const phone = formatCameroonPhone(document.getElementById("loginPhone").value);
-    const password = document.getElementById("loginPassword").value;
-
-    if(!phone) {
-        showMessage("loginMessage", "Enter a valid Cameroon phone number.");
-        return;
-    }
-
-    const button = this.querySelector("button");
-    button.disabled = true;
-    button.textContent = "Logging in...";
-
-    try {
-
-        const { data, error } = await db.auth.signInWithPassword({
-
-            phone: phone,
-            password: password
-
-        });
-
-        if(error) throw error;
-
-        currentUser = data.user;
-
-        await openDashboard();
-
-    } catch(error) {
-
-        showMessage("loginMessage", error.message);
-
-    } finally {
-
-        button.disabled = false;
-        button.textContent = "LOGIN";
-
-    }
-
-});
+);
 
 
-// ===================================
 // 9. OPEN USER DASHBOARD
-// ===================================
-
 
 async function openDashboard() {
 
     if (!currentUser || !db) return;
 
-    const { data, error } = await db
-        .from("profiles")
-        .select("full_name, phone, balance_xaf, last_bonus_at")
-        .eq("id", currentUser.id)
-        .single();
+    try {
 
-    if (error) {
-        alert("Your account was created, but your profile could not be loaded. Please check your Supabase database setup.");
-        console.error("Profile loading error:", error);
-        return;
+        const { data, error } = await db
+            .from("profiles")
+            .select("full_name, phone, balance_xaf, last_bonus_at")
+            .eq("id", currentUser.id)
+            .single();
+
+        if (error) throw error;
+
+        document.getElementById("authPage").classList.add("hidden");
+
+        document.getElementById("dashboardPage").classList.remove("hidden");
+
+        document.getElementById("bottomNav").classList.remove("hidden");
+
+        document.getElementById("userGreeting").textContent =
+            "Hello, " + (data.full_name || "Investor") + " 👋";
+
+        document.getElementById("accountBalance").textContent =
+            Number(data.balance_xaf || 0).toLocaleString("en-US");
+
+        updateBonusButton(data.last_bonus_at);
+
+        showHome();
+
+        window.scrollTo(0, 0);
+
+    } catch (error) {
+
+        console.error("Dashboard loading error:", error);
+
+        alert(
+            "Login succeeded, but your profile could not be loaded. Check that the profiles table and registration trigger exist, and that your profile SELECT policy is enabled. Details: " +
+            error.message
+        );
+
     }
-
-    document.getElementById("authPage").classList.add("hidden");
-    document.getElementById("dashboardPage").classList.remove("hidden");
-    document.getElementById("bottomNav").classList.remove("hidden");
-
-    document.getElementById("userGreeting").textContent =
-        "Hello, " + (data.full_name || "Investor") + " 👋";
-
-    document.getElementById("accountBalance").textContent =
-        Number(data.balance_xaf || 0).toLocaleString("en-US");
-
-    updateBonusButton(data.last_bonus_at);
 }
 
 
-    document.getElementById("userGreeting").textContent =
-        "Hello, " + (data.full_name || "Investor") + " 👋";
-
-    document.getElementById("accountBalance").textContent =
-        Number(data.balance_xaf || 0).toLocaleString("en-US");
-
-    updateBonusButton(data.last_bonus_at);
-
-}
-
-
-// ===================================
-// 10. DAILY BONUS
-// ===================================
+// 10. DAILY BONUS BUTTON
 
 function updateBonusButton(lastBonus) {
 
     const button = document.getElementById("claimButton");
 
-    const lastTime = lastBonus ? new Date(lastBonus).getTime() : 0;
+    const lastTime = lastBonus
+        ? new Date(lastBonus).getTime()
+        : 0;
 
-    const remaining = 24 * 60 * 60 * 1000 - (Date.now() - lastTime);
+    const remaining =
+        24 * 60 * 60 * 1000 - (Date.now() - lastTime);
 
-    if(remaining > 0) {
-
+    if (remaining > 0) {
         button.disabled = true;
         button.textContent = "ALREADY CLAIMED";
-
     } else {
-
         button.disabled = false;
         button.textContent = "CLAIM NOW";
-
     }
-
 }
+
+
+// 11. CLAIM DAILY BONUS
 
 async function claimBonus() {
 
-    if(!db || !currentUser) return;
+    if (!db || !currentUser) return;
 
     const button = document.getElementById("claimButton");
 
@@ -1061,30 +1075,35 @@ async function claimBonus() {
 
         const { data, error } = await db.rpc("claim_daily_bonus");
 
-        if(error) throw error;
+        if (error) throw error;
+
+        const result = Array.isArray(data) ? data[0] : data;
+
+        if (!result || result.balance_xaf === undefined) {
+            throw new Error("Unexpected bonus response from database.");
+        }
 
         document.getElementById("accountBalance").textContent =
-            Number(data.balance_xaf).toLocaleString("en-US");
+            Number(result.balance_xaf).toLocaleString("en-US");
 
         button.textContent = "ALREADY CLAIMED";
 
         alert("Congratulations! 200 XAF has been added to your account.");
 
-    } catch(error) {
+    } catch (error) {
 
-        alert(error.message);
+        console.error("Bonus error:", error);
+
+        alert("Bonus could not be claimed: " + error.message);
 
         button.disabled = false;
         button.textContent = "CLAIM NOW";
 
     }
-
 }
 
 
-// ===================================
-// 11. DASHBOARD NAVIGATION
-// ===================================
+// 12. DASHBOARD NAVIGATION
 
 function showHome() {
 
@@ -1093,7 +1112,6 @@ function showHome() {
     document.getElementById("otherSection").classList.add("hidden");
 
     setActiveNav(0);
-
 }
 
 function showSection(section) {
@@ -1104,32 +1122,45 @@ function showSection(section) {
 
     document.getElementById("sectionTitle").textContent = section;
 
-    const navItems = ["Products", "Team", "My Products", "Settings"];
+    const navItems = [
+        "Products",
+        "Team",
+        "My Products",
+        "Settings"
+    ];
 
-    setActiveNav(navItems.indexOf(section) + 1);
+    const index = navItems.indexOf(section);
 
-    window.scrollTo({top: 0, behavior: "smooth"});
+    setActiveNav(index >= 0 ? index + 1 : -1);
 
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
 }
 
 function setActiveNav(index) {
 
-    document.querySelectorAll(".bottom-nav button").forEach((button, i) => {
-
-        button.classList.toggle("active", i === index);
-
-    });
-
+    document.querySelectorAll(".bottom-nav button").forEach(
+        (button, i) => {
+            button.classList.toggle("active", i === index);
+        }
+    );
 }
 
 
-// ===================================
-// 12. LOGOUT
-// ===================================
+// 13. LOGOUT
 
 async function logout() {
 
-    if(db) await db.auth.signOut();
+    if (!db) return;
+
+    const { error } = await db.auth.signOut();
+
+    if (error) {
+        alert("Could not log out: " + error.message);
+        return;
+    }
 
     currentUser = null;
 
@@ -1139,32 +1170,48 @@ async function logout() {
 
     document.getElementById("authPage").classList.remove("hidden");
 
+    document.getElementById("loginForm").reset();
+
     showLogin();
 
+    window.scrollTo(0, 0);
 }
 
 
-// ===================================
-// 13. RESTORE EXISTING SESSION
-// ===================================
+// 14. RESTORE EXISTING LOGIN SESSION
 
 async function checkSession() {
 
-    if(!db) return;
+    if (!db) return;
 
-    const { data } = await db.auth.getSession();
+    try {
 
-    if(data.session) {
+        const { data, error } = await db.auth.getSession();
 
-        currentUser = data.session.user;
+        if (error) throw error;
 
-        await openDashboard();
+        if (data.session) {
+
+            currentUser = data.session.user;
+
+            await openDashboard();
+
+        }
+
+    } catch (error) {
+
+        console.error("Session restoration error:", error);
 
     }
-
 }
 
+
+// 15. START GREENVEST
+
 checkSession();
+
+console.log("GreenVest application started.");
+
 
 </script>
 
