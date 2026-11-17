@@ -707,6 +707,13 @@ button {
 
 // 1. SUPABASE CONFIGURATION
 
+
+/* =========================================
+   GREENVEST - COMPLETE AUTHENTICATION FIX
+========================================= */
+
+// 1. SUPABASE CONFIGURATION
+
 const SUPABASE_URL = "https://bnqogybpomywzrxmvbgv.supabase.co";
 
 // Paste your existing Supabase Publishable key below.
@@ -889,7 +896,12 @@ document.getElementById("registerForm").addEventListener(
             // Phone confirmation must be disabled in Supabase
             // for immediate registration and dashboard access.
 
-            
+            if (!data.session || !data.user) {
+                showMessage(
+                    "registerMessage",
+                    "Your account was created but phone confirmation is still required. Disable Confirm phone in Supabase Authentication settings, then try again."
+                );
+                return;
             }
 
             currentUser = data.user;
@@ -1017,7 +1029,16 @@ async function openDashboard() {
 
         showHome();
 
-        window.location.href = "dashboard.html";
+        window.scrollTo(0, 0);
+
+    } catch (error) {
+
+        console.error("Dashboard loading error:", error);
+
+        alert(
+            "Login succeeded, but your profile could not be loaded. Check that the profiles table and registration trigger exist, and that your profile SELECT policy is enabled. Details: " +
+            error.message
+        );
 
     }
 }
